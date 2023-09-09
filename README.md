@@ -77,7 +77,7 @@ Press `Run` on the GUI and play your TfT game. It should print stuff in console 
 
 ![plot](./img/demo_1.png)
 
-- In red are the pick rate of the augments from the rank you selected. You have change the rank at any time, even during augment rounds.
+- In red are the pick rate of the augments from the rank you selected. You can change the rank at any time, even during augment rounds.
 
 ![plot](./img/demo_2.png)
 
