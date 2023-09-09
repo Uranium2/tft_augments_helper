@@ -81,6 +81,8 @@ Press `Run` on the GUI and play your TfT game. It should print stuff in console 
 
 ![plot](./img/demo_2.png)
 
+- Overlay display is refreshed every 3 seconds. So you can reroll your augments and wait for new pick up rate.
+
 ![plot](./img/demo_3.png)
 
 
