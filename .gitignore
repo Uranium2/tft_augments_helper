@@ -1,3 +1,7 @@
+# Project 
+config/config.json
+img/*.png
+
 # Visual Studio code
 .vscode/
 
