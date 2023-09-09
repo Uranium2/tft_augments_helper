@@ -49,7 +49,7 @@ Ensure that Tesseract OCR is installed and configured correctly on your system. 
 
 https://tesseract-ocr.github.io/tessdoc/Installation.html
 
-Make sure you binary for tesseract is at `C:\Program Files\Tesseract-OCR\tesseract.exe`
+Make sure your binary for tesseract is at `C:\Program Files\Tesseract-OCR\tesseract.exe`
 
 4. Launch GUI
 
