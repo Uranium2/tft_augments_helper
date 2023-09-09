@@ -42,13 +42,14 @@ cd tft_augments_helper
 ```console
 py -m venv .venv
 .venv/Scripts/activate.bat
+pip install -r requirements.txt
 ```
 
 Ensure that Tesseract OCR is installed and configured correctly on your system. You can download it from the official [Tesseract GitHub repository](https://github.com/UB-Mannheim/tesseract).
 
 https://tesseract-ocr.github.io/tessdoc/Installation.html
 
-Make sure you binary for tesseract is at `C:\Program Files\Tesseract-OCR\tesseract.exe`
+Make sure your binary for tesseract is at `C:\Program Files\Tesseract-OCR\tesseract.exe`
 
 4. Launch GUI
 
