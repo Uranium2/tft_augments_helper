@@ -1,4 +1,5 @@
 import re
+
 import numpy as np
 import pyautogui
 import requests
@@ -118,6 +119,7 @@ def translate_coordinates(old_x, old_y, new_resolution):
 
     return int(new_x), int(new_y)
 
+
 def translate_distance(old_distance, new_resolution):
     """
     Translates a distance from an old screen resolution (2560, 1440) to a new screen resolution.
@@ -143,9 +145,3 @@ def translate_distance(old_distance, new_resolution):
     new_distance = old_distance * scale_factor
 
     return int(new_distance)
-
-
-
-
-
-
