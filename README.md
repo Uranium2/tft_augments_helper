@@ -61,9 +61,31 @@ Select on the GUI the rank you want to check the pick rate of the augments.
 
 Press `Run` on the GUI and play your TfT game. It should print stuff in console every 2-5 seconds to get the round number and if needed the augments names on screen.
 
+## Demo
+
+- Launch code.
+
+```console
+(.venv) tft_augments_helper>py main.py
+```
+- Select the rank to check pick rate from drop down menu. And click `Run` before or during a TFT game.
+
+![plot](./img/demo_0.png)
+
+- The button must show `Running`. Press on `Running` to stop round detection and augments pick rate search.
+
+![plot](./img/demo_1.png)
+
+- In red are the pick rate of the augments from the rank you selected. You have change the rank at any time, even during augment rounds.
+
+![plot](./img/demo_2.png)
+
+![plot](./img/demo_3.png)
+
+
 ## TODO
 
-- Use `translate_coordinates` to make this project work with any ratio.
+- Use `translate_coordinates` to make this project work with any ratio and screen resolution.
 - Clean code, make more constants
 - Clean printing
 - If the OCR get a too small string (Mostly after picking the augment and still in augment round), then don't search for best pick rate and don't display
