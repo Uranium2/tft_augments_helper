@@ -56,7 +56,9 @@ def scrap_augments_pick_rate(rank: str, tier: str) -> dict:
             augment_name = cleanse_text(element_augment_name.text)
             pick_rate = float(element_pick_rate.text.replace("%", ""))
             if augment_name in augment_data:
-                augment_data[augment_name] = augment_data[augment_name] + pick_rate
+                augment_data[augment_name] = round(
+                    augment_data[augment_name] + pick_rate, 2
+                )
             else:
                 augment_data[augment_name] = pick_rate
 
