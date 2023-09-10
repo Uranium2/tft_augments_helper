@@ -133,11 +133,11 @@ def is_augment_round(x: int, y: int) -> bool:
     return is_aug_round
 
 
-def get_augment_pick_rate(config: Dict[str, str], x: int, y: int) -> str:
+def get_augment_pick_rate(config: Dict[str, str], x: int, y: int) -> (str, float):
     """
-    Get the pick rate of an agument based on OCR text analysis and a configuration dictionary.
+    Get the pick rate of an augment based on OCR text analysis and a configuration dictionary.
 
-    This function captures a screenshot of an agument's pick rate from a specified rectangle
+    This function captures a screenshot of an augment's pick rate from a specified rectangle
     and matches the extracted text against a configuration dictionary to determine the augment's pick rate.
 
     Args:
@@ -146,21 +146,22 @@ def get_augment_pick_rate(config: Dict[str, str], x: int, y: int) -> str:
         y (int): The y-coordinate of the top-left corner of the rectangle.
 
     Returns:
-        str: The pick rate of the agument as a string, e.g., "0.0%".
+        str: The name of the augment chosen.
+        float: The pick rate of the augment as a string, e.g., 0.0.
 
     Example:
         >>> config = {
         ...     "challenger_1": {
-        ...         "augment_1": "0.5%",
-        ...         "augment_2": "0.3%",
+        ...         "augment_1": 0.5,
+        ...         "augment_2": 0.3,
         ...     },
         ...     "challenger_2": {
-        ...         "augment_3": "0.1%",
-        ...         "augment_4": "0.2%",
+        ...         "augment_3": 0.1,
+        ...         "augment_4": 0.2,
         ...     },
         ... }
         >>> get_augment_pick_rate(config, 100, 100)
-        '0.5%'
+        0.5
     """
     rectangle = (x - 300, y - 30, 70, 600)
 
@@ -168,13 +169,13 @@ def get_augment_pick_rate(config: Dict[str, str], x: int, y: int) -> str:
 
     cv2.imwrite(f"img/{x}.png", img)
 
-    text = pytesseract.image_to_string(img, config="--psm 6").strip()
+    text = pytesseract.image_to_string(img, config="--psm 6").strip().replace("\n", "")
 
     text = remove_punctuation_and_parentheses(text)
 
     key_to_keep = None
     best_score = 0
-    pick_rate = "0.0%"
+    pick_rate = 0.0
     for i in range(1, 4):
         augment_dict = config[f"""{config["rank"]}_{i}"""]
         if text in augment_dict:
@@ -188,9 +189,11 @@ def get_augment_pick_rate(config: Dict[str, str], x: int, y: int) -> str:
             key_to_keep = key
             pick_rate = augment_dict[key_to_keep]
 
-    print(f"OCR : {text}, nearest key: {key_to_keep}, pick rate: {pick_rate}")
+    print(
+        f"OCR : {text}, nearest key: {key_to_keep}, pick rate: {pick_rate}, best_score: {best_score}"
+    )
 
-    return pick_rate
+    return key_to_keep, pick_rate
 
 
 def display_pick_rate(
@@ -217,18 +220,27 @@ def display_pick_rate(
     canvas.delete("all")
     timer = 3000
 
+    pick_rate_buffer = []
+
     if is_augment_round(middle_x - 300, 0):
         config = load_config()
         for x_position in x_positions:
+            augment_name, pick_rate = get_augment_pick_rate(
+                config, x_position, middle_y
+            )
+            pick_rate_buffer.append((augment_name, pick_rate, x_position))
+    else:
+        timer = 5000
+
+    if not any(item[0] is None for item in pick_rate_buffer):
+        for augment_name, pick_rate, x_position in pick_rate_buffer:
             canvas.create_text(
                 x_position,
                 middle_y - 100,
-                text=get_augment_pick_rate(config, x_position, middle_y),
-                font=("Helvetica", 33),
+                text=f"{augment_name} : {pick_rate} %",
+                font=("Helvetica", 20),
                 fill="red",
             )
-    else:
-        timer = 5000
 
     root.after(
         timer,

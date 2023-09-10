@@ -1,5 +1,6 @@
 # Project 
 config/config.json
+config/*.json
 img/*.png
 
 # Visual Studio code

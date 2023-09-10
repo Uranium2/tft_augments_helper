@@ -53,8 +53,11 @@ def scrap_augments_pick_rate(rank: str, tier: str) -> dict:
             elements_augment_name, elements_pick_rate
         ):
             augment_name = remove_punctuation_and_parentheses(element_augment_name.text)
-            pick_rate = element_pick_rate.text
-            augment_data[augment_name] = pick_rate
+            pick_rate = float(element_pick_rate.text.replace("%", ""))
+            if augment_name in augment_data:
+                augment_data[augment_name] = augment_data[augment_name] + pick_rate
+            else:
+                augment_data[augment_name] = pick_rate
 
         return augment_data
 

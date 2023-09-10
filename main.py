@@ -94,7 +94,9 @@ def make_window() -> sg.Window:
     Example:
         >>> window = make_window()
     """
-    window = sg.Window("TFT Augments Helper", make_layout(), finalize=True)
+    window = sg.Window(
+        "TFT Augments Helper", make_layout(), finalize=True, size=(300, 100)
+    )
     window.bind("<Key-F3>", "F3")
     return window
 
@@ -106,6 +108,7 @@ def init_data(config: Dict[str, str]):
     This function checks the last update date in the configuration and decides whether to update
     the augment pick rate data. If the last update is more than one day ago or if no update date
     is found, it scrapes fresh data for all ranks and tiers and updates the configuration.
+    Also setup ranks from config or defaults to challenger.
 
     Args:
         config (Dict[str, str]): A dictionary containing the application configuration.
@@ -136,21 +139,69 @@ def init_data(config: Dict[str, str]):
 
         edit_config(date_key, current_date.strftime(date_format), config)
 
+    setup_rank(config)
 
-def kill_process(p: Process) -> None:
+
+def setup_rank(config: Dict[str, str]) -> None:
     """
-    Terminate a Process if it is running.
+    Initialize the rank setting in the configuration.
 
-    This function terminates a Process represented by a `Process` object if it is running.
+    This function checks if the "rank" setting exists in the configuration dictionary.
+    If not, it sets the rank to the last rank in the RANKS list and updates the configuration.
 
     Args:
-        p (Process): The Process to terminate, if running.
+        config (Dict[str, str]): The configuration dictionary.
 
     Returns:
         None
     """
-    if p:
+    if "rank" in config:
+        rank = config["rank"]
+    else:
+        rank = RANKS[-1]
+    edit_config("rank", rank, config)
+
+
+def kill_processes(list_processes: List[Process]) -> None:
+    """
+    Terminate a list of Process objects if they are running.
+
+    This function terminates each Process in the provided list if they are running.
+
+    Args:
+        list_processes (List[Process]): A list of Process objects to terminate if running.
+
+    Returns:
+        None
+    """
+    for p in list_processes:
         p.terminate()
+
+
+def rank_event(
+    event: str,
+    values: Dict[str, str],
+    config: Dict[str, str],
+    list_processes: List[Process],
+) -> None:
+    """
+    Handle events related to the "rank" setting.
+
+    This function checks if the event corresponds to a "rank" change, terminates any running processes,
+    and updates the "rank" setting in the configuration.
+
+    Args:
+        event (str): The event triggered by the user.
+        values (Dict[str, str]): The values from the GUI.
+        config (Dict[str, str]): The configuration dictionary.
+        list_processes (List[Process]): A list of Process objects to terminate if running.
+
+    Returns:
+        None
+    """
+    if event == "rank":
+        kill_processes(list_processes)
+        edit_config("rank", values["rank"], config)
 
 
 def main_gui():
@@ -164,6 +215,7 @@ def main_gui():
     Returns:
         None
     """
+    list_processes = []
     config = load_config()
 
     init_data(config)
@@ -181,12 +233,12 @@ def main_gui():
         print(f"Values are : {values}")
 
         if event in (sg.WIN_CLOSED, "Exit", None):
-            kill_process(p)
+            kill_processes(list_processes)
             window.close()
             break
-        if event == "rank":
-            kill_process(p)
-            edit_config("rank", values["rank"], config)
+
+        rank_event(event, values, config, list_processes)
+
         if event == "F3":
             down_f3 = set_process_state(not down_f3, window)
         if down_f3:
@@ -195,8 +247,9 @@ def main_gui():
                 target=process,
             )
             p.start()
+            list_processes.append(p)
         else:
-            kill_process(p)
+            kill_processes(list_processes)
 
 
 if __name__ == "__main__":
