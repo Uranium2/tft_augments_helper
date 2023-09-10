@@ -7,7 +7,7 @@ import numpy as np
 import pytesseract
 from fuzzywuzzy import fuzz
 
-from src.config import edit_config, load_config
+from src.config import load_config
 from src.utils import cleanse_text, crop_screenshot, take_screenshot, translate_distance
 
 pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
@@ -36,10 +36,6 @@ def live_image_process(rectangle: List[int]) -> np.ndarray:
 
     Returns:
         np.ndarray: The processed binary image.
-
-    Example:
-        >>> rectangle = [100, 100, 200, 200]  # Define a rectangle
-        >>> processed_image = live_image_process(rectangle)  # Process the image
     """
     x = rectangle[0]
     y = rectangle[1]
@@ -69,14 +65,6 @@ def find_approximate_key(
     Returns:
         Tuple[Optional[str], int]: A tuple containing the best-matching key (or None if no match is found)
         and the matching score.
-
-    Example:
-        >>> my_dict = {'apple': 'fruit', 'banana': 'fruit', 'carrot': 'vegetable'}
-        >>> key, score = find_approximate_key(my_dict, 'bananna')
-        >>> key
-        'banana'
-        >>> score
-        86
     """
     best_match = None
     best_score = 0
@@ -90,7 +78,7 @@ def find_approximate_key(
     return best_match, best_score
 
 
-def is_augment_round(x: int, y: int, screen_resolution) -> bool:
+def is_augment_round(x: int, y: int, screen_resolution: Tuple[int, int]) -> bool:
     """
     Determine if a screenshot of a game round is an 'augment' round based on OCR text analysis.
 
@@ -101,13 +89,10 @@ def is_augment_round(x: int, y: int, screen_resolution) -> bool:
     Args:
         x (int): The x-coordinate of the top-left corner of the rectangle.
         y (int): The y-coordinate of the top-left corner of the rectangle.
+        screen_resolution (Tuple[int, int]): The screen resolution as a tuple (width, height).
 
     Returns:
         bool: True if the round is an 'augment' round, False otherwise.
-
-    Example:
-        >>> is_augment_round(100, 100)
-        True
     """
     # Distance to change 70, 300
     height = translate_distance(70, screen_resolution)
@@ -143,8 +128,11 @@ def is_augment_round(x: int, y: int, screen_resolution) -> bool:
 
 
 def get_augment_pick_rate(
-    config: Dict[str, str], x: int, y: int, screen_resolution
-) -> (str, float):
+    config: Dict[str, Dict[str, str]],
+    x: int,
+    y: int,
+    screen_resolution: Tuple[int, int],
+) -> Tuple[str, float]:
     """
     Get the pick rate of an augment based on OCR text analysis and a configuration dictionary.
 
@@ -155,24 +143,11 @@ def get_augment_pick_rate(
         config (Dict[str, str]): A dictionary containing augment pick rate data.
         x (int): The x-coordinate of the top-left corner of the rectangle.
         y (int): The y-coordinate of the top-left corner of the rectangle.
+        screen_resolution (Tuple[int, int]): The screen resolution as a tuple (width, height).
 
     Returns:
         str: The name of the augment chosen.
         float: The pick rate of the augment as a string, e.g., 0.0.
-
-    Example:
-        >>> config = {
-        ...     "challenger_1": {
-        ...         "augment_1": 0.5,
-        ...         "augment_2": 0.3,
-        ...     },
-        ...     "challenger_2": {
-        ...         "augment_3": 0.1,
-        ...         "augment_4": 0.2,
-        ...     },
-        ... }
-        >>> get_augment_pick_rate(config, 100, 100, screen_resolution)
-        0.5
     """
     # Distance 300, distance 30, distance 70, distance 600
     x_padding = translate_distance(300, screen_resolution)
@@ -219,8 +194,8 @@ def display_pick_rate(
     x_positions: List[int],
     middle_x: int,
     middle_y: int,
-    screen_resolution,
-):
+    screen_resolution: Tuple[int, int],
+) -> None:
     """
     Display the pick rates of augments on a canvas within a specified region.
 
@@ -234,10 +209,7 @@ def display_pick_rate(
         x_positions (List[int]): A list of x-coordinates where augment pick rates should be displayed.
         middle_x (int): The x-coordinate of the center of the canvas.
         middle_y (int): The y-coordinate of the center of the canvas.
-        config (Dict[str, Dict[str, str]]): A dictionary containing augment pick rate data.
-
-    Returns:
-        None
+        screen_resolution (Tuple[int, int]): The screen resolution as a tuple (width, height).
     """
     canvas.delete("all")
     timer = 3000
@@ -275,19 +247,13 @@ def display_pick_rate(
     )
 
 
-def process(config):
+def process() -> None:
     """
     Process and display game augment pick rates on a full-screen Tkinter window.
 
     This function initializes a full-screen Tkinter window, captures screen dimensions, and calculates
     positions for displaying augment pick rates using OCR. It then creates and displays a canvas for
     rendering the pick rates based on the provided configuration.
-
-    Args:
-        config (Dict[str, Dict[str, str]]): A dictionary containing augment pick rate data.
-
-    Returns:
-        None
     """
     root = Tk()
     screen_width = root.winfo_screenwidth()
