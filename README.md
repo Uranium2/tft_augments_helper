@@ -91,7 +91,6 @@ Press `Run` on the GUI and play your TfT game. It should print stuff in console 
 - Use `translate_coordinates` to make this project work with any ratio and screen resolution.
 - Clean code, make more constants
 - Clean printing
-- If the OCR get a too small string (Mostly after picking the augment and still in augment round), then don't search for best pick rate and don't display
 
 
 ## License
