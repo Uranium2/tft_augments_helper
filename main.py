@@ -49,26 +49,35 @@ def set_process_state(is_running: bool, window: sg.Window) -> bool:
     return is_running
 
 
-def make_layout() -> List[List[sg.Element]]:
+def make_layout(config: Dict[str, str]) -> List[List[sg.Element]]:
     """
     Create the layout for a TFT Augments Helper GUI.
 
     This function generates a layout for a graphical user interface (GUI) that assists with TFT Augments.
     The layout includes a title, a combo box for selecting ranks, and a "Run" button.
 
+    Args:
+        config (Dict[str, str]): A dictionary containing the application configuration.
+
     Returns:
         List[List[sg.Element]]: The PySimpleGUI layout for the TFT Augments Helper GUI.
 
     Example:
-        >>> layout = make_layout()
+        >>> layout = make_layout(config)
     """
+
+    if "rank" in config:
+        rank = config["rank"]
+    else:
+        rank = RANKS[-1]
+        edit_config("rank", rank, config)
     layout = [
         [
             [sg.Text("TFT Augments Helper")],
             [
                 sg.Combo(
                     RANKS,
-                    default_value=RANKS[-1],
+                    default_value=rank,
                     key="rank",
                     size=(20, 1),
                     readonly=True,
@@ -81,21 +90,24 @@ def make_layout() -> List[List[sg.Element]]:
     return layout
 
 
-def make_window() -> sg.Window:
+def make_window(config: Dict[str, str]) -> sg.Window:
     """
     Create and initialize the TFT Augments Helper window.
 
     This function creates a PySimpleGUI window for the TFT Augments Helper application.
     It sets the window title, layout using the `make_layout` function, and initializes it.
 
+    Args:
+        config (Dict[str, str]): A dictionary containing the application configuration.
+
     Returns:
         sg.Window: The initialized TFT Augments Helper window.
 
     Example:
-        >>> window = make_window()
+        >>> window = make_window(config)
     """
     window = sg.Window(
-        "TFT Augments Helper", make_layout(), finalize=True, size=(300, 100)
+        "TFT Augments Helper", make_layout(config), finalize=True, size=(300, 100)
     )
     window.bind("<Key-F3>", "F3")
     return window
@@ -182,32 +194,6 @@ def kill_processes(list_processes: List[Process]) -> None:
         p.terminate()
 
 
-def rank_event(
-    event: str,
-    values: Dict[str, str],
-    config: Dict[str, str],
-    list_processes: List[Process],
-) -> None:
-    """
-    Handle events related to the "rank" setting.
-
-    This function checks if the event corresponds to a "rank" change, terminates any running processes,
-    and updates the "rank" setting in the configuration.
-
-    Args:
-        event (str): The event triggered by the user.
-        values (Dict[str, str]): The values from the GUI.
-        config (Dict[str, str]): The configuration dictionary.
-        list_processes (List[Process]): A list of Process objects to terminate if running.
-
-    Returns:
-        None
-    """
-    if event == "rank":
-        kill_processes(list_processes)
-        edit_config("rank", values["rank"], config)
-
-
 def main_gui():
     """
     Run the TFT Augments Helper GUI application.
@@ -224,7 +210,7 @@ def main_gui():
 
     init_data(config)
     # Create the window
-    window = make_window()
+    window = make_window(config)
 
     down_f3 = False
     p = None
@@ -241,7 +227,9 @@ def main_gui():
             window.close()
             break
 
-        rank_event(event, values, config, list_processes)
+        if event == "rank":
+            kill_processes(list_processes)
+            edit_config("rank", values["rank"], config)
 
         if event == "F3":
             down_f3 = set_process_state(not down_f3, window)
