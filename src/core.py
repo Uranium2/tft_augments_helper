@@ -8,11 +8,7 @@ import pytesseract
 from fuzzywuzzy import fuzz
 
 from src.config import load_config
-from src.utils import (
-    crop_screenshot,
-    remove_punctuation_and_parentheses,
-    take_screenshot,
-)
+from src.utils import cleanse_text, crop_screenshot, take_screenshot
 
 pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
@@ -118,18 +114,27 @@ def is_augment_round(x: int, y: int) -> bool:
     cv2.imwrite(f"img/round.png", img)
     is_aug_round = False
 
+    # Try multiple presets of pytesseract, preset 6 should detect most of it.
     for i in range(13, 5, -1):
-        text = pytesseract.image_to_string(img, config=f"--psm {i}").strip()
+        text = (
+            pytesseract.image_to_string(img, config=f"--psm {i}")
+            .strip()
+            .replace("\n", "")
+        )
         pattern = r"\d+-\d+"
         matches = re.findall(pattern, text)
         if not matches:
-            round = 0
+            round_number = None
         else:
-            round = matches[0]
-        if round in ["2-1", "3-2", "4-2"]:
+            round_number = matches[0]
+        if round_number in ["2-1", "3-2", "4-2"]:
             is_aug_round = True
             break
-    print(f"round {round} from text '{text}'")
+
+    if round_number:
+        print(f"Round {round_number}: '{text}'")
+    else:
+        print(f"Not an augment Round: '{text}'")
     return is_aug_round
 
 
@@ -169,9 +174,9 @@ def get_augment_pick_rate(config: Dict[str, str], x: int, y: int) -> (str, float
 
     cv2.imwrite(f"img/{x}.png", img)
 
-    text = pytesseract.image_to_string(img, config="--psm 6").strip().replace("\n", "")
+    text = pytesseract.image_to_string(img, config="--psm 6")
 
-    text = remove_punctuation_and_parentheses(text)
+    text = cleanse_text(text)
 
     key_to_keep = None
     best_score = 0
@@ -181,6 +186,7 @@ def get_augment_pick_rate(config: Dict[str, str], x: int, y: int) -> (str, float
         if text in augment_dict:
             key_to_keep = text
             pick_rate = augment_dict[key_to_keep]
+            best_score = 100
             break
         key, score = find_approximate_key(augment_dict, text)
 

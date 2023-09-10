@@ -130,14 +130,18 @@ def init_data(config: Dict[str, str]):
             make_scrap = True
     else:
         make_scrap = True
-    print(f"make_scrap = {make_scrap}")
+
     if make_scrap:
+        print(f"Scrapping ...")
         # Get fresh data pick rate
         for rank, tier in product(RANKS, range(1, NB_AUGMENTS + 1)):
             augment_data = scrap_augments_pick_rate(rank, tier)
             edit_config(f"{rank}_{tier}", augment_data, config)
 
         edit_config(date_key, current_date.strftime(date_format), config)
+        print(f"Scrapping done.")
+    else:
+        print(f"Skipped scrapping.")
 
     setup_rank(config)
 

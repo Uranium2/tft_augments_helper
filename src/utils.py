@@ -6,7 +6,7 @@ import requests
 from bs4 import BeautifulSoup
 
 
-def remove_punctuation_and_parentheses(text: str) -> str:
+def cleanse_text(text: str) -> str:
     """
     Remove punctuation (excluding parentheses) and text within parentheses from the given text.
 
@@ -14,7 +14,8 @@ def remove_punctuation_and_parentheses(text: str) -> str:
         text (str): The input text containing punctuation and parentheses.
 
     Returns:
-        str: The input text with punctuation (excluding parentheses) and text within parentheses removed.
+        str: The input text with punctuation (excluding parentheses) and text within parentheses removed,
+             and newline characters are removed.
     """
     # Remove punctuation (excluding parentheses)
     text_without_punctuation = re.sub(r"[^\w\s()]", "", text)
@@ -22,7 +23,7 @@ def remove_punctuation_and_parentheses(text: str) -> str:
     # Remove text within parentheses and the parentheses themselves
     text_without_parentheses = re.sub(r"\([^)]*\)", "", text_without_punctuation)
 
-    return text_without_parentheses
+    return text_without_parentheses.strip().replace("\n", "")
 
 
 def scrap_augments_pick_rate(rank: str, tier: str) -> dict:
@@ -52,7 +53,7 @@ def scrap_augments_pick_rate(rank: str, tier: str) -> dict:
         for element_augment_name, element_pick_rate in zip(
             elements_augment_name, elements_pick_rate
         ):
-            augment_name = remove_punctuation_and_parentheses(element_augment_name.text)
+            augment_name = cleanse_text(element_augment_name.text)
             pick_rate = float(element_pick_rate.text.replace("%", ""))
             if augment_name in augment_data:
                 augment_data[augment_name] = augment_data[augment_name] + pick_rate

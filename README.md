@@ -90,7 +90,6 @@ Press `Run` on the GUI and play your TfT game. It should print stuff in console 
 
 - Use `translate_coordinates` to make this project work with any ratio and screen resolution.
 - Clean code, make more constants
-- Clean printing
 
 
 ## License
