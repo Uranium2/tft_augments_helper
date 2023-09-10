@@ -2,22 +2,26 @@
 
 TFT Augments Helper is a Python-based project that automates the collection and display of the most picked augments in Teamfight Tactics (TFT) based on player ranks. It scrapes data from a designated website daily and, when launched during augments rounds, uses Optical Character Recognition (OCR) via Tesseract to identify the augments in the game and display their pick rates according to the selected player rank.
 
-Please note that TFT Augments Helper is currently optimized for a resolution of 2560 x 1440 and requires the installation of necessary dependencies, including Tesseract, [locally on your system ](https://tesseract-ocr.github.io/tessdoc/Installation.html).
+**Please note that TFT Augments Helper may have some bugs; please read the `Disclaimer` section!**
 
 ## Disclaimer
 
-This project is designed to work with a specific screen resolution (2560 x 1440). Using it with other resolutions may result in inaccurate results. Additionally, you must install the required dependencies, including Tesseract, before using the application.
+1. This project should manage every screen resolution with a 16:9 ratio. Note that image cropping for the OCR was originally designed for a WQHD screen (2560 x 1440). It has also been tested on:
 
-This project does not support Hyper roll mode. The augments rounds are not at ("2-1", "3-2", "4-2").
+- FHD (1920 x 1080)
+- HD Ready (1280 x 720)
 
-This project does not work in WSL.
-This project might not work in Linux based OS (I never installed LoL on Linux).
-This project was tested with python 3.10 and windows 10.
+Using this application with a different ratio (21:9 or 4:3) may result in inaccurate results. Additionally, you must install the required dependencies, including Tesseract, before using the application.
+
+2. This project does not support the `Hyper roll` mode. The augments rounds are not at ("2-1", "3-2", "4-2").
+3. This project does not work in WSL.
+4. This project might not work in Linux-based OS (I never installed LoL on Linux).
+5. This project was only tested with Python 3.10 and Windows 10.
 
 ## Features
 
 - Daily web scraping to collect data on the most picked augments ranks (Iron, Bronze, Silver, Gold, Platinum, Diamond, Master, Grandmaster, Challenger)
-- OCR-based augmentation detection during TFT rounds. ("2-1", "3-2", "4-2") Does not support Hyper roll mode at the moment. 
+- OCR-based augmentation detection during TFT rounds. ("2-1", "3-2", "4-2") Does not support `Hyper roll` mode at the moment.
 - Display of pick rates for augments based on the selected player rank.
 
 ## Prerequisites
@@ -88,8 +92,8 @@ Press `Run` on the GUI and play your TfT game. It should print stuff in console 
 
 ## TODO
 
-- Use `translate_coordinates` to make this project work with any ratio and screen resolution.
 - Clean code, make more constants
+- `Hyper roll` mode, make interface select box, save it, load at startup + change constant values for rounds. Make rounds constant in a dict
 
 
 ## License

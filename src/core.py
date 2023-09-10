@@ -7,8 +7,8 @@ import numpy as np
 import pytesseract
 from fuzzywuzzy import fuzz
 
-from src.config import load_config
-from src.utils import cleanse_text, crop_screenshot, take_screenshot
+from src.config import edit_config, load_config
+from src.utils import cleanse_text, crop_screenshot, take_screenshot, translate_distance
 
 pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
@@ -90,7 +90,7 @@ def find_approximate_key(
     return best_match, best_score
 
 
-def is_augment_round(x: int, y: int) -> bool:
+def is_augment_round(x: int, y: int, screen_resolution) -> bool:
     """
     Determine if a screenshot of a game round is an 'augment' round based on OCR text analysis.
 
@@ -109,7 +109,10 @@ def is_augment_round(x: int, y: int) -> bool:
         >>> is_augment_round(100, 100)
         True
     """
-    rectangle = (x, y, 70, 300)
+    # Distance to change 70, 300
+    height = translate_distance(70, screen_resolution)
+    width = translate_distance(300, screen_resolution)
+    rectangle = (x, y, height, width)
     img = live_image_process(rectangle)
     cv2.imwrite(f"img/round.png", img)
     is_aug_round = False
@@ -121,13 +124,14 @@ def is_augment_round(x: int, y: int) -> bool:
             .strip()
             .replace("\n", "")
         )
-        pattern = r"\d+-\d+"
+        pattern = r"\d+-?\d+"
         matches = re.findall(pattern, text)
         if not matches:
             round_number = None
         else:
             round_number = matches[0]
-        if round_number in ["2-1", "3-2", "4-2"]:
+        # Format round with `-` and also concat, low res OCR does not get the `-`
+        if round_number in ["2-1", "3-2", "4-2", "21", "32", "42"]:
             is_aug_round = True
             break
 
@@ -138,7 +142,9 @@ def is_augment_round(x: int, y: int) -> bool:
     return is_aug_round
 
 
-def get_augment_pick_rate(config: Dict[str, str], x: int, y: int) -> (str, float):
+def get_augment_pick_rate(
+    config: Dict[str, str], x: int, y: int, screen_resolution
+) -> (str, float):
     """
     Get the pick rate of an augment based on OCR text analysis and a configuration dictionary.
 
@@ -165,10 +171,15 @@ def get_augment_pick_rate(config: Dict[str, str], x: int, y: int) -> (str, float
         ...         "augment_4": 0.2,
         ...     },
         ... }
-        >>> get_augment_pick_rate(config, 100, 100)
+        >>> get_augment_pick_rate(config, 100, 100, screen_resolution)
         0.5
     """
-    rectangle = (x - 300, y - 30, 70, 600)
+    # Distance 300, distance 30, distance 70, distance 600
+    x_padding = translate_distance(300, screen_resolution)
+    y_padding = translate_distance(30, screen_resolution)
+    width = translate_distance(70, screen_resolution)
+    height = translate_distance(600, screen_resolution)
+    rectangle = (x - x_padding, y - y_padding, width, height)
 
     img = live_image_process(rectangle)
 
@@ -203,7 +214,12 @@ def get_augment_pick_rate(config: Dict[str, str], x: int, y: int) -> (str, float
 
 
 def display_pick_rate(
-    root: Tk, canvas: Canvas, x_positions: List[int], middle_x: int, middle_y: int
+    root: Tk,
+    canvas: Canvas,
+    x_positions: List[int],
+    middle_x: int,
+    middle_y: int,
+    screen_resolution,
 ):
     """
     Display the pick rates of augments on a canvas within a specified region.
@@ -227,12 +243,14 @@ def display_pick_rate(
     timer = 3000
 
     pick_rate_buffer = []
-
-    if is_augment_round(middle_x - 300, 0):
+    # distance to change 300
+    x_padding = translate_distance(300, screen_resolution)
+    y_padding = translate_distance(100, screen_resolution)
+    if is_augment_round(middle_x - x_padding, 0, screen_resolution):
         config = load_config()
         for x_position in x_positions:
             augment_name, pick_rate = get_augment_pick_rate(
-                config, x_position, middle_y
+                config, x_position, middle_y, screen_resolution
             )
             pick_rate_buffer.append((augment_name, pick_rate, x_position))
     else:
@@ -240,9 +258,10 @@ def display_pick_rate(
 
     if not any(item[0] is None for item in pick_rate_buffer):
         for augment_name, pick_rate, x_position in pick_rate_buffer:
+            # Distance to change 100
             canvas.create_text(
                 x_position,
-                middle_y - 100,
+                middle_y - y_padding,
                 text=f"{augment_name} : {pick_rate} %",
                 font=("Helvetica", 20),
                 fill="red",
@@ -250,11 +269,13 @@ def display_pick_rate(
 
     root.after(
         timer,
-        lambda: display_pick_rate(root, canvas, x_positions, middle_x, middle_y),
+        lambda: display_pick_rate(
+            root, canvas, x_positions, middle_x, middle_y, screen_resolution
+        ),
     )
 
 
-def process():
+def process(config):
     """
     Process and display game augment pick rates on a full-screen Tkinter window.
 
@@ -269,21 +290,23 @@ def process():
         None
     """
     root = Tk()
-    sw = root.winfo_screenwidth()
-    sh = root.winfo_screenheight()
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
 
-    middle_x = sw // 2
-    middle_y = sh // 2
+    screen_resolution = (screen_width, screen_height)
+
+    middle_x = screen_width // 2  # Good value for any screen
+    middle_y = screen_height // 2  # Good value for any screen
 
     # Get X values for OCR and display
-    distance_to_border = min(middle_x, middle_y)
-    left_position = middle_x - distance_to_border
-    right_position = middle_x + distance_to_border
-    distance_to_border_2 = min(left_position, middle_y)
-    left_position = middle_x - distance_to_border_2
-    right_position = middle_x + distance_to_border_2
+    distance_to_border = min(middle_x, middle_y)  # Good value for any screen
+    left_position = middle_x - distance_to_border  # Good value for any screen
+    right_position = middle_x + distance_to_border  # Good value for any screen
+    distance_to_border_2 = min(left_position, middle_y)  # Good value for any screen
+    left_position = middle_x - distance_to_border_2  # Good value for any screen
+    right_position = middle_x + distance_to_border_2  # Good value for any screen
 
-    x_positions = [left_position, middle_x, right_position]
+    x_positions = [left_position, middle_x, right_position]  # Good value for any screen
 
     root.config(bg=TRANSPARENT_COLOR)
     root.attributes("-transparentcolor", TRANSPARENT_COLOR)
@@ -293,5 +316,5 @@ def process():
     canvas = Canvas(root, bg=TRANSPARENT_COLOR, highlightthickness=0)
     canvas.pack(fill="both", expand=True)
 
-    display_pick_rate(root, canvas, x_positions, middle_x, middle_y)
+    display_pick_rate(root, canvas, x_positions, middle_x, middle_y, screen_resolution)
     root.mainloop()

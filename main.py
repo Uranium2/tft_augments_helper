@@ -235,9 +235,7 @@ def main_gui():
             down_f3 = set_process_state(not down_f3, window)
         if down_f3:
             print("Starting process")
-            p = Process(
-                target=process,
-            )
+            p = Process(target=process, args=(config,))
             p.start()
             list_processes.append(p)
         else:
