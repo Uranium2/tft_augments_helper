@@ -7,7 +7,7 @@ import PySimpleGUI as sg
 
 from src.config import edit_config, load_config
 from src.core import process
-from src.utils import scrap_augments_pick_rate
+from src.utils import scrap_augments_stats
 
 NB_AUGMENTS = 3
 RANKS = [
@@ -118,7 +118,7 @@ def init_data(config: Dict[str, str]):
     Initialize data for TFT Augments Helper.
 
     This function checks the last update date in the configuration and decides whether to update
-    the augment pick rate data. If the last update is more than one day ago or if no update date
+    the augment stat data. If the last update is more than one day ago or if no update date
     is found, it scrapes fresh data for all ranks and tiers and updates the configuration.
     Also setup ranks from config or defaults to challenger.
 
@@ -145,9 +145,15 @@ def init_data(config: Dict[str, str]):
 
     if make_scrap:
         print(f"Scrapping ...")
-        # Get fresh data pick rate
+        # Get fresh data stat
         for rank, tier in product(RANKS, range(1, NB_AUGMENTS + 1)):
-            augment_data = scrap_augments_pick_rate(rank, tier)
+            # Sometime it fails for no reason and rescrapping (maybe js of website not working well)
+            for _ in range(10):
+                try:
+                    augment_data = scrap_augments_stats(rank, tier)
+                    break
+                except:
+                    print("scrap_augments_stats failed, retrying")
             edit_config(f"{rank}_{tier}", augment_data, config)
 
         edit_config(date_key, current_date.strftime(date_format), config)

@@ -26,41 +26,57 @@ def cleanse_text(text: str) -> str:
     return text_without_parentheses.strip().replace("\n", "")
 
 
-def scrap_augments_pick_rate(rank: str, tier: str) -> dict:
+def cleanse_text_legend(text: str) -> str:
     """
-    Scrapes augments pick rates from the Mobalytics website for a given rank and tier.
+    Removes the word '(Legend)' from the input text.
+
+    Args:
+        text (str): The input text to be cleaned.
+
+    Returns:
+        str: The cleaned text with '(Legend)' removed.
+    """
+    cleaned_text = text.replace("(Legend)", "")
+    return cleaned_text
+
+
+def scrap_augments_stats(rank: str, tier: str) -> dict:
+    """
+    Scrapes augments stats from the Mobalytics website for a given rank and tier.
 
     Args:
         rank (str): The player's rank.
         tier (int): The player's tier.
 
     Returns:
-        dict: A dictionary containing augments names as keys and pick rates as values.
+        dict: A dictionary containing augments names as keys and stats as values.
     """
     url = f"https://app.mobalytics.gg/tft/tier-list/augments?rank={rank}&tier={tier}"
-    print("Getting pick rates from", rank, tier)
+    print("Getting stats from", rank, tier)
 
     response = requests.get(url)
 
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, "html.parser")
 
-        elements_augment_name = soup.find_all(class_="m-po6via")
-
-        elements_pick_rate = soup.find_all(class_="m-virx8l")
-
         augment_data = {}
-        for element_augment_name, element_pick_rate in zip(
-            elements_augment_name, elements_pick_rate
-        ):
-            augment_name = cleanse_text(element_augment_name.text)
-            pick_rate = float(element_pick_rate.text.replace("%", ""))
-            if augment_name in augment_data:
-                augment_data[augment_name] = round(
-                    augment_data[augment_name] + pick_rate, 2
-                )
-            else:
-                augment_data[augment_name] = pick_rate
+        # Find the container that holds all augment data
+        augment_containers = soup.find_all(class_="m-ub27pe")
+
+        # Loop through each augment container and extract the data
+        for container in augment_containers:
+            augment_name = cleanse_text_legend(
+                container.find(class_="m-po6via").text.strip()
+            )
+            m_virx81 = container.find_all(class_="m-virx8l")
+            avg_place = m_virx81[0].text.strip()
+            win_rate = m_virx81[1].text.strip()
+            pick_rate = m_virx81[2].text.strip()
+
+            augment_data[augment_name] = {}
+            augment_data[augment_name]["pick_rate"] = pick_rate
+            augment_data[augment_name]["avg_place"] = avg_place
+            augment_data[augment_name]["win_rate"] = win_rate
 
         return augment_data
 

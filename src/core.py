@@ -127,27 +127,27 @@ def is_augment_round(x: int, y: int, screen_resolution: Tuple[int, int]) -> bool
     return is_aug_round
 
 
-def get_augment_pick_rate(
+def get_augment_stats(
     config: Dict[str, Dict[str, str]],
     x: int,
     y: int,
     screen_resolution: Tuple[int, int],
-) -> Tuple[str, float]:
+) -> Tuple[str, Dict[str, any]]:
     """
-    Get the pick rate of an augment based on OCR text analysis and a configuration dictionary.
+    Get the stats of an augment based on OCR text analysis and a configuration dictionary.
 
-    This function captures a screenshot of an augment's pick rate from a specified rectangle
-    and matches the extracted text against a configuration dictionary to determine the augment's pick rate.
+    This function captures a screenshot of an augment's stats from a specified rectangle
+    and matches the extracted text against a configuration dictionary to determine the augment's stats.
 
     Args:
-        config (Dict[str, str]): A dictionary containing augment pick rate data.
+        config (Dict[str, str]): A dictionary containing augment stats data.
         x (int): The x-coordinate of the top-left corner of the rectangle.
         y (int): The y-coordinate of the top-left corner of the rectangle.
         screen_resolution (Tuple[int, int]): The screen resolution as a tuple (width, height).
 
     Returns:
         str: The name of the augment chosen.
-        float: The pick rate of the augment as a string, e.g., 0.0.
+        dict: The stats of the augment as a dict
     """
     # Distance 300, distance 30, distance 70, distance 600
     x_padding = translate_distance(300, screen_resolution)
@@ -166,12 +166,12 @@ def get_augment_pick_rate(
 
     key_to_keep = None
     best_score = 0
-    pick_rate = 0.0
+    stats = {}
     for i in range(1, 4):
         augment_dict = config[f"""{config["rank"]}_{i}"""]
         if text in augment_dict:
             key_to_keep = text
-            pick_rate = augment_dict[key_to_keep]
+            stats = augment_dict[key_to_keep]
             best_score = 100
             break
         key, score = find_approximate_key(augment_dict, text)
@@ -179,16 +179,16 @@ def get_augment_pick_rate(
         if score > best_score:
             best_score = score
             key_to_keep = key
-            pick_rate = augment_dict[key_to_keep]
+            stats = augment_dict[key_to_keep]
 
     print(
-        f"OCR : {text}, nearest key: {key_to_keep}, pick rate: {pick_rate}, best_score: {best_score}"
+        f"OCR : {text}, nearest key: {key_to_keep}, stats: {stats}, best_score: {best_score}"
     )
 
-    return key_to_keep, pick_rate
+    return key_to_keep, stats
 
 
-def display_pick_rate(
+def display_stats(
     root: Tk,
     canvas: Canvas,
     x_positions: List[int],
@@ -197,16 +197,16 @@ def display_pick_rate(
     screen_resolution: Tuple[int, int],
 ) -> None:
     """
-    Display the pick rates of augments on a canvas within a specified region.
+    Display the stats of augments on a canvas within a specified region.
 
-    This function updates the canvas to display the pick rates of augments at the specified
+    This function updates the canvas to display the stats of augments at the specified
     x positions within a rectangular region. The display is updated based on the result of the
     `is_augment_round` function, and it periodically reschedules itself using `root.after`.
 
     Args:
         root (Tk): The Tkinter root window.
-        canvas (Canvas): The Tkinter canvas to display pick rates on.
-        x_positions (List[int]): A list of x-coordinates where augment pick rates should be displayed.
+        canvas (Canvas): The Tkinter canvas to display stats on.
+        x_positions (List[int]): A list of x-coordinates where augment stats should be displayed.
         middle_x (int): The x-coordinate of the center of the canvas.
         middle_y (int): The y-coordinate of the center of the canvas.
         screen_resolution (Tuple[int, int]): The screen resolution as a tuple (width, height).
@@ -214,34 +214,36 @@ def display_pick_rate(
     canvas.delete("all")
     timer = 3000
 
-    pick_rate_buffer = []
+    stats_buffer = []
     # distance to change 300
     x_padding = translate_distance(300, screen_resolution)
     y_padding = translate_distance(100, screen_resolution)
     if is_augment_round(middle_x - x_padding, 0, screen_resolution):
         config = load_config()
         for x_position in x_positions:
-            augment_name, pick_rate = get_augment_pick_rate(
+            augment_name, stats = get_augment_stats(
                 config, x_position, middle_y, screen_resolution
             )
-            pick_rate_buffer.append((augment_name, pick_rate, x_position))
+            stats_buffer.append((augment_name, stats, x_position))
     else:
         timer = 5000
 
-    if not any(item[0] is None for item in pick_rate_buffer):
-        for augment_name, pick_rate, x_position in pick_rate_buffer:
+    if not any(item[0] is None for item in stats_buffer):
+        for augment_name, stats, x_position in stats_buffer:
+            text_to_display = f"""pick_rate : {stats["pick_rate"]}\navg_place : {stats["avg_place"]}\nwin_rate : {stats["win_rate"]}"""
+
             # Distance to change 100
             canvas.create_text(
                 x_position,
                 middle_y - y_padding,
-                text=f"{augment_name} : {pick_rate} %",
+                text=text_to_display,
                 font=("Helvetica", 20),
                 fill="red",
             )
 
     root.after(
         timer,
-        lambda: display_pick_rate(
+        lambda: display_stats(
             root, canvas, x_positions, middle_x, middle_y, screen_resolution
         ),
     )
@@ -249,11 +251,11 @@ def display_pick_rate(
 
 def process() -> None:
     """
-    Process and display game augment pick rates on a full-screen Tkinter window.
+    Process and display game augment stats on a full-screen Tkinter window.
 
     This function initializes a full-screen Tkinter window, captures screen dimensions, and calculates
-    positions for displaying augment pick rates using OCR. It then creates and displays a canvas for
-    rendering the pick rates based on the provided configuration.
+    positions for displaying augment stats using OCR. It then creates and displays a canvas for
+    rendering the stats based on the provided configuration.
     """
     root = Tk()
     screen_width = root.winfo_screenwidth()
@@ -282,5 +284,5 @@ def process() -> None:
     canvas = Canvas(root, bg=TRANSPARENT_COLOR, highlightthickness=0)
     canvas.pack(fill="both", expand=True)
 
-    display_pick_rate(root, canvas, x_positions, middle_x, middle_y, screen_resolution)
+    display_stats(root, canvas, x_positions, middle_x, middle_y, screen_resolution)
     root.mainloop()

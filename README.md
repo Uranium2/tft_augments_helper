@@ -1,6 +1,6 @@
 # TFT Augments Helper
 
-TFT Augments Helper is a Python-based project that automates the collection and display of the most picked augments in Teamfight Tactics (TFT) based on player ranks. It scrapes data from a designated website daily and, when launched during augments rounds, uses Optical Character Recognition (OCR) via Tesseract to identify the augments in the game and display their pick rates according to the selected player rank.
+TFT Augments Helper is a Python-based project that automates the collection and display of stats over augments in Teamfight Tactics (TFT) based on player ranks. It scrapes data from a designated website daily and, when launched during augments rounds, uses Optical Character Recognition (OCR) via Tesseract to identify the augments in the game and display their stats according to the selected player rank.
 
 **Please note that TFT Augments Helper may have some bugs; please read the `Disclaimer` section!**
 
@@ -20,9 +20,9 @@ Using this application with a different ratio (21:9 or 4:3) may result in inaccu
 
 ## Features
 
-- Daily web scraping to collect data on the most picked augments ranks (Iron, Bronze, Silver, Gold, Platinum, Diamond, Master, Grandmaster, Challenger)
+- Daily web scraping to collect data on the most picked, average position and win rate on augments ranks (Iron, Bronze, Silver, Gold, Platinum, Diamond, Master, Grandmaster, Challenger)
 - OCR-based augmentation detection during TFT rounds. ("2-1", "3-2", "4-2") Does not support `Hyper roll` mode at the moment.
-- Display of pick rates for augments based on the selected player rank.
+- Display of stats for augments based on the selected player rank.
 
 ## Prerequisites
 
@@ -60,7 +60,7 @@ Make sure your binary for tesseract is at `C:\Program Files\Tesseract-OCR\tesser
 ```console
 py main.py
 ```
-Select on the GUI the rank you want to check the pick rate of the augments.
+Select on the GUI the rank you want to check the stats of the augments.
 
 5. Run
 
@@ -73,19 +73,19 @@ Press `Run` on the GUI and play your TfT game. It should print stuff in console 
 ```console
 (.venv) tft_augments_helper>py main.py
 ```
-- Select the rank to check pick rate from drop down menu. And click `Run` before or during a TFT game.
+- Select the rank to check stats from drop down menu. And click `Run` before or during a TFT game.
 
 ![plot](./img/demo_0.png)
 
-- The button must show `Running`. Press on `Running` to stop round detection and augments pick rate search.
+- The button must show `Running`. Press on `Running` to stop round detection and augments stats search.
 
 ![plot](./img/demo_1.png)
 
-- In red are the pick rate of the augments from the rank you selected. You can change the rank at any time, even during augment rounds.
+- In red are the stats of the augments from the rank you selected. You can change the rank at any time, even during augment rounds.
 
 ![plot](./img/demo_2.png)
 
-- Overlay display is refreshed every 3 seconds. So you can reroll your augments and wait for new pick up rate.
+- Overlay display is refreshed every 3 seconds. So you can reroll your augments and wait for new stats.
 
 ![plot](./img/demo_3.png)
 
@@ -94,6 +94,9 @@ Press `Run` on the GUI and play your TfT game. It should print stuff in console 
 
 - Clean code, make more constants
 - `Hyper roll` mode, make interface select box, save it, load at startup + change constant values for rounds. Make rounds constant in a dict
+- More decision making? Eco? Roll? Level up?
+- change scrapping for https://tactics.tools/augments/gm ?
+- Use riotwatcher for tft api? https://github.com/pseudonym117/Riot-Watcher/blob/10bf58ebd6a4a2f543367551e710609e3255e74d/src/riotwatcher/_apis/team_fight_tactics/MatchApi.py#L10
 
 
 ## License
