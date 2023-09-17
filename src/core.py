@@ -230,7 +230,7 @@ def display_stats(
 
     if not any(item[0] is None for item in stats_buffer):
         for augment_name, stats, x_position in stats_buffer:
-            text_to_display = f"""pick_rate : {stats["pick_rate"]}\navg_place : {stats["avg_place"]}\nwin_rate : {stats["win_rate"]}"""
+            text_to_display = f"""{augment_name}\nPick Rate : {stats["pick_rate"]}\nAvg Place : {stats["avg_place"]}\nWin Rate : {stats["win_rate"]}"""
 
             # Distance to change 100
             canvas.create_text(
